@@ -7,7 +7,7 @@
 	* Description: Hide your website behind something fluffy.
 	* Text Domain: curtain
 	* Domain Path: /lang/
-	* Version: 1.0.0
+	* Version: 1.0.1
 	* Author: Leonard Lamprecht
 	* Author URI: https://profiles.wordpress.org/mindrun/#content-plugins
 	* License: GPLv2
@@ -20,7 +20,7 @@ class main {
 
 	public function __construct() {
 
-		$actions = [
+		$actions = array(
 			'init',
 			'admin_bar_menu',
 			'ct_enqueue_scripts',
@@ -29,20 +29,20 @@ class main {
 			'admin_enqueue_scripts',
 			'admin_notices',
 			'plugins_loaded'
-		];
+		);
 
-		$lang = [
+		$lang = array(
 			__( 'Hide your website behind something fluffy.', 'curtain' )
-		];
+		);
 
 		foreach( $actions as $key => $action ) {
-			add_action( $action, [ $this, $action ] );
+			add_action( $action, array( $this, $action ) );
 		}
 
-		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), [ $this, 'links' ] );
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'links' ) );
 
-		register_activation_hook( __FILE__, [ $this, 'activate' ] );
-		register_deactivation_hook( __FILE__, [ $this, 'deactivate' ] );
+		register_activation_hook( __FILE__, array( $this, 'activate' ) );
+		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
 
 	}
 
@@ -74,12 +74,13 @@ class main {
 
 		$color = get_background_color();
 
-		$handles = [
+		$handles = array(
 			'mode' => 0,
 			'background' => '#' . ( !$color ? 'ffffff' : $color ),
 			'heading' => __( 'Maintenance', 'curtain' ),
-			'description' => sprintf( __( 'Please excuse the inconveniences, this site is currently in maintenance work. %s Check back soon!', 'curtain' ), '&#8212;' )
-		];
+			'description' => sprintf( __( 'Please excuse the inconveniences, this site is currently in maintenance work. %s Check back soon!', 'curtain' ), '&#8212;' ),
+			'ips' => array( '127.0.0.1', '8.8.8.8' )
+		);
 
 		if( $options ) {
 			array_shift( $handles );
@@ -91,12 +92,12 @@ class main {
 
 	private function head() {
 
-		$defaults = [
+		$defaults = array(
 			'wp_no_robots',
 			'wp_generator',
 			'wp_print_styles',
 			'wp_print_head_scripts'
-		];
+		);
 
 		do_action( 'ct_enqueue_scripts' );
 
@@ -121,10 +122,10 @@ class main {
 
 		global $wp_roles;
 
-		$roles = [
+		$roles = array(
 			'administrator',
 			'editor'
-		];
+		);
 
 		$cap = 'manage_curtain';
 
@@ -188,15 +189,52 @@ class main {
 
 	}
 
+	private function default_mode() {
+
+		$maintenance_file = ABSPATH . '.maintenance';
+
+		if( file_exists( $maintenance_file ) ) {
+
+			return true;
+
+			include( $maintenance_file );
+
+			if( ( time() - $upgrading ) >= 600 ) {
+				return false;
+			}
+
+		} else {
+			return false;
+		}
+
+	}
+
 	public function init() {
 
-		require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+		global $pagenow;
 
-		if( ! $this->options( 'mode' ) || is_user_logged_in() || $GLOBALS['pagenow'] == 'wp-login.php' ) {
+		$yes = array(
+			$this->default_mode(),
+			( $this->options( 'mode' ) ? true : false )
+		);
+
+		$no = array(
+			is_admin(),
+			is_user_logged_in(),
+			$pagenow == 'wp-login.php',
+			$pagenow == 'xmlrpc.php',
+			defined( 'WP_INSTALLING' ),
+			in_array( $_SERVER['REMOTE_ADDR'], $this->options( 'ips' ) )
+		);
+
+		if( in_array( false, $yes ) || in_array( true, $no ) ) {
 			return;
 		}
 
-		$version = get_plugin_data( __FILE__ )['Version'];
+		require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+
+		$plugin_data = get_plugin_data( __FILE__ );
+		$version = $plugin_data['Version'];
 
 		header( $_SERVER['SERVER_PROTOCOL'] . ' 503 Service Unavailable', true, 503 );
 
@@ -213,24 +251,24 @@ class main {
 		$mode = $this->options( 'mode' );
 		$status = ( $mode ? __( 'hidden', 'curtain' ) : __( 'visible', 'curtain' ) );
 
-		$nodes = [
+		$nodes = array(
 
-			[
+			array(
 				'id'    => 'curtain',
 				'title' => '<span class="ab-icon"></span>',
 				'href'  => add_query_arg( 'curtain', ( $mode ? 0 : 1 ), $this->current_url( 'activate' ) ),
 				'meta'  => array( 'class' => ( $mode ? 'on' : 'off' ) ),
 				'parent' => 'top-secondary'
-			],
+			),
 
-			[
+			array(
 				'id'    => 'curtain-mode',
 				'title' => __( 'Your site is', 'curtain' ) . ' <b>' . $status . '</b>',
 				'href'  => false,
 				'parent' => 'curtain'
-			]
+			)
 
-		];
+		);
 
 		foreach( $nodes as $key => $data ) {
 			$admin_bar->add_node( $data );
@@ -254,7 +292,8 @@ class main {
 
 		}
 
-		$text = contrast( explode( '#', $background )[1] );
+		$bg_split = explode( '#', $background );
+		$text = contrast( $bg_split[1] );
 
 		$body = "\t" . "body {
 			color: {$text};
@@ -268,9 +307,9 @@ class main {
 
 	public function links( $actions ) {
 
-		$link = [
+		$link = array(
 			'settings' => '<a href="' . admin_url( 'options-general.php?page=curtain' ) . '">' . __( 'Settings', 'curtain' ) . '</a>'
-		];
+		);
 
 		return array_merge( $actions, $link );
 
@@ -293,7 +332,7 @@ class main {
 		array_shift( $options );
 
 		if( $this->defaults( 1 ) == $options && $actual == $this->caps() ) {
-			return false;
+			return null;
 		} else {
 			return ' show';
 		}
@@ -335,7 +374,7 @@ class main {
 	public function admin_menu() {
 
 		$title = __( 'Maintenance', 'curtain' );
-		add_options_page( $title, $title, 'manage_options', 'curtain', [ $this, 'load_options' ] );
+		add_options_page( $title, $title, 'manage_options', 'curtain', array( $this, 'load_options' ) );
 
 	}
 
@@ -391,7 +430,8 @@ class main {
 
 	    foreach( $assets as $int => $file ) {
 
-	        $type = ( explode( '.', $file )[1] == 'js' ? 'script' : 'style' );
+			$split = explode( '.', $file );
+	        $type = ( $split[1] == 'js' ? 'script' : 'style' );
 
 	        call_user_func( 'wp_enqueue_' . $type, 'curtain', plugins_url( 'assets/' . $file, __FILE__ ) );
 
@@ -405,28 +445,34 @@ class settings extends main {
 
 	public function __construct() {
 
-		$labels = [
+		$labels = array(
 			__( 'Background', 'curtain' ),
 			__( 'Heading', 'curtain' ),
 			__( 'Description', 'curtain' ),
-			__( 'Managers', 'curtain' )
-		];
+			__( 'Managers', 'curtain' ),
+			__( 'Allowed IPs', 'curtain' )
+		);
 
 		add_settings_section( 'settings', false, false, 'curtain' );
-		register_setting( 'settings', 'curtain', [ $this, 'sanitize' ] );
+		register_setting( 'settings', 'curtain', array( $this, 'sanitize' ) );
 
-		$defaults = array_merge( parent::defaults( 1 ), [ 'roles' => 0 ] );
+		$defaults = parent::defaults( 1 );
+		$key_pos = array_search( 'description', array_keys( $defaults ) );
+
+		$key_pos++;
+
+		$defaults = array_merge( array_merge( array_slice( $defaults, 0, $key_pos ), array( 'roles' => 0 ) ), array_slice( $defaults, $key_pos ) );
 
 		foreach( $defaults as $handle => $value ) {
 
 			$array_pos = array_search( $handle, array_keys( $defaults ) );
-			add_settings_field( $handle, $labels[$array_pos], [ $this, $handle ], 'curtain', 'settings', array( 'label_for' => $handle ) );
+			add_settings_field( $handle, $labels[$array_pos], array( $this, $handle ), 'curtain', 'settings', array( 'label_for' => $handle ) );
 
 		}
 
 	}
 
-	public function sanitize( $options = [] ) {
+	public function sanitize( $options = array() ) {
 
 		$old = (array) $this->options();
 
@@ -441,8 +487,14 @@ class settings extends main {
 					get_role( $role )->add_cap( 'manage_curtain' );
 				}
 
+			} else if( $name == 'ips' ) {
+
+				$old['ips'] = explode( ', ', $value );
+
 			} else {
-				$old[$name] = ( is_numeric( $value ) ? intval( $value ) : $value );
+
+				$old[$name] = ( is_numeric( $value ) ? intval( $value ) : str_replace( '—', '&#8212;', $value ) );
+
 			}
 
 		}
@@ -453,11 +505,12 @@ class settings extends main {
 
 	public function background() {
 
-		$default = parent::defaults( 1 )['background'];
+		$defaults = parent::defaults( 1 );
+		$bg = $defaults['background'];
 
 		?>
 
-		<input name="curtain[background]" type="text" value="<?php echo parent::options( 'background' ) ?>" data-default-color="<?php echo $default ?>">
+		<input name="curtain[background]" type="text" value="<?php echo parent::options( 'background' ) ?>" data-default-color="<?php echo $bg; ?>">
 		<p class="description"><?php echo __( "The default color equals your theme's background", "curtain" ) ?></p>
 
 		<?php
@@ -504,6 +557,23 @@ class settings extends main {
 		?>
 
 		<p class="description"><?php echo __( "Who can enable/disable the maintenance mode?", "curtain" ) ?></p>
+
+		<?php
+
+	}
+
+	public function ips() {
+
+		$counter = 0;
+		$ips = null;
+
+		foreach( parent::options( 'ips' ) as $key => $ip ) {
+			$ips .= ( $counter++ > 0 ? ', ' : null ) . $ip;
+		}
+
+		?>
+
+		<input name="curtain[ips]" id="ips" type="text" value="<?php echo $ips; ?>" class="regular-text code">
 
 		<?php
 

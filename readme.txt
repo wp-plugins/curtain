@@ -2,9 +2,9 @@
 
 Contributors: mindrun
 Tags: maintenance, mode, curtain, coming soon, under construction, unavailable, 503 error, admin, landing page
-Requires at Least: 3.7
+Requires at Least: 3.8
 Tested Up To: 4.1.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,10 +40,20 @@ Currently **German** and **English**, more will follow soon.
 
 == Changelog ==
 
+= 1.0.1 =
+* Reset button now appears also when the background is being changed
+* Better compatibility with PHP versions (> 5.4)
+* You can now allow visitors with specific IPs to skip the maintenance mode
+* The login link is now also visible on small Tablets like the iPad mini
+* Now supports Jetpack's Centralized Site Management (thanks to Ben B. @ Automattic)
+
 = 1.0.0 =
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+This version fixes a few bugs and makes curtain more compatible.
 
 = 1.0.0 =
 This version contains the initial parts of the plugin.
