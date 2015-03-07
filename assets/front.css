@@ -1,4 +1,4 @@
-@import url( //fonts.googleapis.com/css?family=Open+Sans:400,700 );
+@import '//fonts.googleapis.com/css?family=Open+Sans:400,700';
 
 * {
 	margin: 0;
@@ -50,7 +50,7 @@ section {
 	line-height: 150%;
 }
 
-@media (min-width: 750px) {
+@media ( min-width: 750px ) {
 
 	section {
 		line-height: 170%;

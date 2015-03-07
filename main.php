@@ -7,7 +7,7 @@
 	* Description: Hide your website behind something fluffy.
 	* Text Domain: curtain
 	* Domain Path: /lang/
-	* Version: 1.0.1
+	* Version: 1.0.2
 	* Author: Leonard Lamprecht
 	* Author URI: https://profiles.wordpress.org/mindrun/#content-plugins
 	* License: GPLv2
@@ -16,7 +16,7 @@
 
 namespace curtain;
 
-class main {
+class load {
 
 	public function __construct() {
 
@@ -26,7 +26,7 @@ class main {
 			'ct_enqueue_scripts',
 			'admin_menu',
 			'admin_init',
-			'admin_enqueue_scripts',
+			'wp_loaded',
 			'admin_notices',
 			'plugins_loaded'
 		);
@@ -54,7 +54,7 @@ class main {
 		$url = get_admin_url( $blog_id, $pagenow . ( $query ? '?' . $query : null ) );
 
 		if( $remove ) {
-			$url = preg_replace( '/([?&])' . $remove . '=[^&]+(&|$)/', '$1', $url );
+			$url = remove_query_arg( $remove, $url );
 		}
 
 		return $url;
@@ -215,7 +215,7 @@ class main {
 
 		$yes = array(
 			$this->default_mode(),
-			( $this->options( 'mode' ) ? true : false )
+			$this->options( 'mode' )
 		);
 
 		$no = array(
@@ -227,7 +227,7 @@ class main {
 			in_array( $_SERVER['REMOTE_ADDR'], $this->options( 'ips' ) )
 		);
 
-		if( in_array( false, $yes ) || in_array( true, $no ) ) {
+		if( ! in_array( 1, $yes ) || in_array( 1, $no ) ) {
 			return;
 		}
 
@@ -250,13 +250,14 @@ class main {
 
 		$mode = $this->options( 'mode' );
 		$status = ( $mode ? __( 'hidden', 'curtain' ) : __( 'visible', 'curtain' ) );
+		$activate_url = add_query_arg( 'curtain', ( $mode ? 0 : 1 ), $this->current_url( array( 'activate', 'mode', 'settings-updated' ) ) );
 
 		$nodes = array(
 
 			array(
 				'id'    => 'curtain',
 				'title' => '<span class="ab-icon"></span>',
-				'href'  => add_query_arg( 'curtain', ( $mode ? 0 : 1 ), $this->current_url( 'activate' ) ),
+				'href'  => wp_nonce_url( $activate_url, 'curtain_mode' ),
 				'meta'  => array( 'class' => ( $mode ? 'on' : 'off' ) ),
 				'parent' => 'top-secondary'
 			),
@@ -341,6 +342,8 @@ class main {
 
 	public function load_options() {
 
+		$reset_url = wp_nonce_url( $this->current_url( 'mode' ) . '&reset', 'curtain_reset' );
+
 		?>
 
 		<div class="wrap curtain">
@@ -359,7 +362,7 @@ class main {
 			<p class="submit">
 
 				<?php submit_button( __( 'Save Changes' ), 'primary', 'submit', false ); ?>
-				<a href="<?php echo $_SERVER['REQUEST_URI']; ?>&reset" class="button reset<?php echo $this->need_reset(); ?>"><?php _e( 'Reset', 'curtain' ); ?></a>
+				<a href="<?php echo $reset_url; ?>" class="button reset<?php echo $this->need_reset(); ?>"><?php _e( 'Reset', 'curtain' ); ?></a>
 
 			</p>
 
@@ -386,24 +389,24 @@ class main {
 
 	public function admin_init() {
 
-		if( isset( $_GET['reset'] ) && $_GET['page'] == 'curtain' ) {
+		if( current_user_can( 'manage_curtain' ) && is_user_logged_in() && isset( $_REQUEST['_wpnonce'] ) ) {
 
-			$old = $this->options( 'mode' );
+			if( isset( $_GET['reset'] ) && $this->option_screen() && check_admin_referer( 'curtain_reset' ) ) {
 
-			$this->deactivate();
-			$this->activate();
+				$old = $this->options( 'mode' );
 
-			if( $this->options( 'mode' ) !== $old ) {
-				$this->set_mode( $old );
+				$this->deactivate();
+				$this->activate();
+
+				if( $this->options( 'mode' ) !== $old ) {
+					$this->set_mode( $old );
+				}
+
+				wp_redirect( admin_url( 'options-general.php?page=curtain' ) );
+
 			}
 
-			wp_redirect( admin_url( 'options-general.php?page=curtain' ) );
-
-		}
-
-		if( isset( $_GET['curtain'] ) ) {
-
-			if( $this->set_mode( intval( $_GET['curtain'] ) ) ) {
+			if( isset( $_GET['curtain'] ) && check_admin_referer( 'curtain_mode' ) && $this->set_mode( intval( $_GET['curtain'] ) ) ) {
 
 				wp_redirect( add_query_arg( 'mode', $_GET['curtain'], $this->current_url( 'curtain' ) ) );
 				exit;
@@ -418,30 +421,36 @@ class main {
 
 	}
 
-	public function admin_enqueue_scripts() {
+	public function option_screen() {
 
-		wp_enqueue_style( 'wp-color-picker' );
-		wp_enqueue_script( 'wp-color-picker' );
+		global $pagenow;
 
-	    $assets = array(
-			'admin.css',
-			'admin.js'
-	    );
+		if( $pagenow == 'options-general.php' && isset( $_GET['page'] ) && $_GET['page'] == 'curtain' ) {
+			return true;
+		} else {
+			return false;
+		}
 
-	    foreach( $assets as $int => $file ) {
+	}
 
-			$split = explode( '.', $file );
-	        $type = ( $split[1] == 'js' ? 'script' : 'style' );
+	public function wp_loaded() {
 
-	        call_user_func( 'wp_enqueue_' . $type, 'curtain', plugins_url( 'assets/' . $file, __FILE__ ) );
+		if( is_admin() && $this->option_screen() ) {
 
-	    }
+			wp_enqueue_style( 'wp-color-picker' );
+			wp_enqueue_script( 'wp-color-picker' );
+
+			wp_enqueue_script( 'curtain', plugins_url( 'assets/admin.js', __FILE__ ) );
+
+		}
+
+		wp_enqueue_style( 'curtain', plugins_url( 'assets/admin.css', __FILE__ ) );
 
 	}
 
 }
 
-class settings extends main {
+class settings extends load {
 
 	public function __construct() {
 
@@ -459,9 +468,7 @@ class settings extends main {
 		$defaults = parent::defaults( 1 );
 		$key_pos = array_search( 'description', array_keys( $defaults ) );
 
-		$key_pos++;
-
-		$defaults = array_merge( array_merge( array_slice( $defaults, 0, $key_pos ), array( 'roles' => 0 ) ), array_slice( $defaults, $key_pos ) );
+		$defaults = array_merge( array_merge( array_slice( $defaults, 0, $key_pos++ ), array( 'roles' => 0 ) ), array_slice( $defaults, --$key_pos ) );
 
 		foreach( $defaults as $handle => $value ) {
 
@@ -581,6 +588,6 @@ class settings extends main {
 
 }
 
-new main;
+new load;
 
 ?>

@@ -4,7 +4,7 @@ Contributors: mindrun
 Tags: maintenance, mode, curtain, coming soon, under construction, unavailable, 503 error, admin, landing page
 Requires at Least: 3.8
 Tested Up To: 4.1.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,15 @@ Hide your website behind something fluffy.
 This plugin adds a tiny option to your WordPress Back-End which allows you to control the maintenance mode. It's perfect if you would like to change something on your site without everyone noticing.
 
 After enabling the maintenance mode, all visitors will see a small page which shows a short notice about why your site is maintenance. If you don't like the default look of this page, you can change all the texts and some other things like the background or the user roles which are allowed to manage it's status right in the admin-area.
+
+**Unique features:**
+
+* Informs search engines about the maintenance
+* Clean & simple interface
+* Change the maintenance mode status in the admin bar
+* Automatically adapts to your theme's look
+* Theme- and plugin-developers are able to add custom stylesheets/scripts
+* Allow specific visitors (based on IP) to skip the maintenance notice
 
 All aspects of the plugin are optimized for the highest performance. It's also possible for other theme- or plugin-developers to customize the appereance of the page by [hooking](faq) into curtain's code and adding custom stylesheets.
 
@@ -40,6 +49,11 @@ Currently **German** and **English**, more will follow soon.
 
 == Changelog ==
 
+= 1.0.2 =
+* A security bug which allowed users to enable/disable the maintenance mode without logging in has been fixed
+* The admin bar icon will now also be shown on the front-end
+* A bug was fixed which disallowed some users to activate the maintenance mode
+
 = 1.0.1 =
 * Reset button now appears also when the background is being changed
 * Better compatibility with PHP versions (> 5.4)
@@ -51,6 +65,9 @@ Currently **German** and **English**, more will follow soon.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+This version is a security release, please update immediately.
 
 = 1.0.1 =
 This version fixes a few bugs and makes curtain more compatible.
