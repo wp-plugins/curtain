@@ -14,8 +14,6 @@ Hide your website behind something fluffy.
 
 This plugin adds a tiny option to your WordPress Back-End which allows you to control the maintenance mode. It's perfect if you would like to change something on your site without everyone noticing.
 
-After enabling the maintenance mode, all visitors will see a small page which shows a short notice about why your site is maintenance. If you don't like the default look of this page, you can change all the texts and some other things like the background or the user roles which are allowed to manage it's status right in the admin-area.
-
 **Unique features:**
 
 * Informs search engines about the maintenance
@@ -24,6 +22,8 @@ After enabling the maintenance mode, all visitors will see a small page which sh
 * Automatically adapts to your theme's look
 * Theme- and plugin-developers are able to add custom stylesheets/scripts
 * Allow specific visitors (based on IP) to skip the maintenance notice
+
+After enabling the maintenance mode, all visitors will see a small page which shows a short notice about why your site is maintenance. If you don't like the default look of this page, you can change all the texts and some other things like the background or the user roles which are allowed to manage it's status right in the admin-area.
 
 All aspects of the plugin are optimized for the highest performance. It's also possible for other theme- or plugin-developers to customize the appereance of the page by [hooking](faq) into curtain's code and adding custom stylesheets.
 
