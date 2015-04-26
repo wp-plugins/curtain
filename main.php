@@ -179,7 +179,7 @@ class load {
 			$mode = $_GET['mode'];
 			$status = ( $mode ? __( 'activated', 'curtain' ) : __( 'deactivated', 'curtain' ) );
 
-			echo '<div class="' . ( $mode ? 'updated' : 'error' ) . '"><p>';
+			echo '<div class="' . ( $mode ? 'updated' : 'error' ) . ' is-dismissible"><p>';
 
 				printf( __( 'The Maintenance mode has been %s.', 'curtain' ), '<b>' . $status . '</b>' );
 
