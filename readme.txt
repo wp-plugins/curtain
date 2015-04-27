@@ -1,6 +1,7 @@
 === Curtain ===
 
 Contributors: mindrun
+Donate link: http://goo.gl/Xc7uRF
 Tags: maintenance, mode, curtain, coming soon, under construction, unavailable, 503 error, admin, landing page
 Requires at Least: 4.0
 Tested Up To: 4.2
